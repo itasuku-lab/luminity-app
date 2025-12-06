@@ -1,0 +1,61 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin / ダッシュボード{% endblock %}
+{% block head %}ダッシュボード{% endblock %}
+{% block content %}
+
+<!-- KPI -->
+<div class="grid cols-3">
+  <div class="card"><div class="kv"><span>ユーザー総数</span><strong>{{ metrics.users_total or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>直近7日 新規</span><strong>{{ metrics.users_new_7d or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>投稿</span><strong>{{ metrics.posts_total or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>コメント</span><strong>{{ metrics.comments_total or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>非表示投稿</span><strong>{{ metrics.hidden_posts or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>非表示コメント</span><strong>{{ metrics.hidden_comments or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>申請（保留）</span><strong>{{ metrics.pending_claims or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>有効なお知らせ</span><strong>{{ metrics.active_announces or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>ストア上書き</span><strong>{{ metrics.overrides or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>安全度手動補正</span><strong>{{ metrics.safety_overrides or 0 }}</strong></div></div>
+</div>
+
+<!-- クイック操作 -->
+<div class="card">
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <a class="btn" href="{{ url_for('admin_announcements') }}">お知らせ</a>
+    <a class="btn" href="/admin/claims">オーナー申請</a>
+    <a class="btn" href="/admin/posts">投稿</a>
+    <a class="btn" href="/admin/comments">コメント</a>
+    <a class="btn" href="/admin/tags">タグ</a>
+
+    <form class="inline" method="get" onsubmit="location.href='/admin/stores/'+this.store_id.value+'/override'; return false;" style="margin-left:auto">
+      <span class="muted">店舗ID</span>
+      <input name="store_id" placeholder="e.g. 1" style="width:120px">
+      <button class="btn primary">オーバーライドを開く</button>
+    </form>
+
+    <form class="inline" method="post" action="/admin/sheets/cache/clear">
+      <button class="btn">Sheetsキャッシュ削除</button>
+    </form>
+    <form class="inline" method="post" action="/admin/sheets/cache/refresh">
+      <button class="btn primary">Sheets再読込</button>
+    </form>
+    {% if metrics.sheets %}
+    <span class="muted mono">キャッシュ: {{ 'yes' if metrics.sheets.cached else 'no' }} / ts={{ metrics.sheets.ts or '-' }}</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Favorites ランキング -->
+<div class="card">
+  <h3 style="margin:0 0 8px">お気に入り 上位ストア</h3>
+  {% if metrics.favorite_top_stores %}
+  <table>
+    <tr><th>店舗ID</th><th>件数</th></tr>
+    {% for r in metrics.favorite_top_stores %}
+      <tr><td>{{ r.store_id }}</td><td>{{ r.count }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p class="muted">データがありません</p>
+  {% endif %}
+</div>
+{% endblock %}

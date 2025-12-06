@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ store.get("店舗名") }} | レビュー</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .container{max-width:860px;margin:0 auto;padding:16px;}
+    .card{background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.08);padding:16px;}
+    .title{font-size:1.35rem;font-weight:800;margin:0 0 8px;}
+    .muted{color:#777;}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .btn{display:inline-flex;align-items:center;gap:.35rem;padding:8px 12px;border-radius:10px;background:#f7f7f7;border:1px solid #eee;text-decoration:none;color:#333;font-weight:600;}
+    .btn.primary{background:#ffe07a;border-color:#ffd34a;}
+    .list{list-style:none;margin:0;padding:0}
+    .list li{border-top:1px solid #eee;padding:10px 0}
+    .stars{color:#f5a623;letter-spacing:1px}
+    .field{display:flex;gap:10px;align-items:center;margin:.5rem 0}
+    nav.navbar{background:#ffc400;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+    nav .nav-logo{font-weight:800;color:#222;text-decoration:none}
+    nav .navbar-right a{color:#222;margin-left:16px;text-decoration:none;font-weight:600}
+    .flash{padding:10px 12px;border-radius:10px;margin:8px 0}
+    .flash.success{background:#eafbea;border:1px solid #b7e3b7}
+    .flash.error{background:#fdecec;border:1px solid #f3b3b3}
+    .flash.info{background:#eef6ff;border:1px solid #c5defa}
+  </style>
+
+  {% macro stars(r) -%}
+    {% set r = (r or 0) %}
+    {% set full = (r // 1)|int %}
+    {% set half = 1 if (r - full) >= 0.5 else 0 %}
+    {% set empty = 5 - full - half %}
+    <span class="stars" aria-label="平均 {{ '%.1f' % r }} / 5">
+      {% for _ in range(full) %}★{% endfor %}
+      {% if half %}☆{% endif %}
+      {% for _ in range(empty) %}☆{% endfor %}
+    </span>
+  {%- endmacro %}
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/dashboard" class="nav-logo">Luminality</a>
+    <div class="navbar-right">
+      <a href="{{ url_for('search') }}">店舗検索</a>
+      <a href="{{ url_for('mypage') }}">マイページ</a>
+      <a href="{{ url_for('logout') }}">ログアウト</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <article class="card">
+      <h1 class="title">{{ store.get("店舗名") }}</h1>
+      <p class="muted">
+        {{ stars(store.get('app_rating')) }}
+        {{ '%.1f' % (store.get('app_rating') or 0) }}（{{ store.get('app_review_count') or 0 }}件）
+      </p>
+
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% if msgs %}
+          {% for cat, msg in msgs %}
+            <div class="flash {{ cat }}">{{ msg }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form action="{{ url_for('reviews', store_id=store_id) }}" method="post" style="margin:12px 0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field">
+          <label>評価</label>
+          <select name="rating" required>
+            <option value="">選択</option>
+            {% for n in range(1,6) %}
+              <option value="{{ n }}">{{ n }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field" style="width:100%;">
+          <label style="min-width:3em;">コメント</label>
+          <textarea name="comment" rows="3" style="flex:1; width:100%;"></textarea>
+        </div>
+        <button class="btn primary" type="submit">投稿する</button>
+        <a class="btn" href="{{ url_for('store_detail', store_id=store_id) }}">店舗詳細に戻る</a>
+      </form>
+
+      <h3 style="margin-top:18px;">みんなのレビュー</h3>
+      <ul class="list">
+        {% for r in reviews_list %}
+          <li>
+            <div>{{ stars(r['rating']) }} <span class="muted">{{ r['created_at'] }}</span></div>
+            {% if r['comment'] %}<div>{{ r['comment'] }}</div>{% endif %}
+          </li>
+        {% else %}
+          <li class="muted">まだレビューはありません。</li>
+        {% endfor %}
+      </ul>
+    </article>
+  </main>
+</body>
+</html>

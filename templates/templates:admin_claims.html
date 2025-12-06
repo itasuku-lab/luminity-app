@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}オーナー申請の審査{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:1100px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:1rem;">オーナー申請の審査</h1>
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <ul class="flash-list" style="margin:0 0 1rem 0;padding-left:1rem;">
+        {% for cat, msg in messages %}
+          <li class="flash-{{cat}}">{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="get" action="{{ url_for('admin_claims') }}" class="card"
+        style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;background:#fff;border-radius:14px;padding:.75rem 1rem;box-shadow:0 6px 16px rgba(0,0,0,.06);margin-bottom:1rem;">
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="申請者名/メール/メッセージ検索"
+           style="flex:1;min-width:260px;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+    <div style="display:flex;gap:.25rem;">
+      {% for s in ['pending','approved','rejected'] %}
+        <a href="{{ url_for('admin_claims', status=s) }}"
+           style="padding:.45rem .8rem;border-radius:999px;border:1px solid #ddd;text-decoration:none;{% if status==s %}background:#fff7e0;border-color:#FFC107;font-weight:700;{% endif %}">
+          {{ '保留' if s=='pending' else ('承認' if s=='approved' else '却下') }}
+        </a>
+      {% endfor %}
+    </div>
+    <button class="btn" type="submit"
+            style="padding:.6rem 1rem;border-radius:999px;background:linear-gradient(#FFC107,#F57C00);border:none;font-weight:700;">
+      検索
+    </button>
+  </form>
+
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead style="background:#fff7e0;">
+        <tr>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ID</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">店舗</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">申請者</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">メール</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">メッセージ</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">証憑</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">状態</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows and rows|length > 0 %}
+          {% for c in rows %}
+            <tr>
+              <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ c.id }}</td>
+              <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+                {% set name = store_names.get(c.store_id|int) %}
+                <a href="{{ url_for('store_detail', store_id=c.store_id) }}" target="_blank" rel="noopener"
+                   style="text-decoration:underline;">{{ name or ('店舗#' ~ c.store_id) }}</a>
+              </td>
+              <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ c.name or '-' }}</td>
+              <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+                {% if c.email %}<a href="mailto:{{ c.email }}">{{ c.email }}</a>{% else %}-{% endif %}
+              </td>
+              <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;max-width:360px;">
+                <div style="white-space:pre-wrap; word-break:break-word;">{{ c.message or '-' }}</div>
+              </td>
+              <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+                {% if c.evidence_path %}
+                  <a href="{{ url_for('static', filename=c.evidence_path) }}" target="_blank" rel="noopener">
+                    <img src="{{ url_for('static', filename=c.evidence_path) }}"
+                         alt="evidence" style="width:90px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #eee;">
+                  </a>
+                {% else %}
+                  －
+                {% endif %}
+              </td>
+              <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+                {% if c.status == 'pending' %}
+                  <span class="badge" style="background:#ffe9a7;color:#6b4b00;padding:.2rem .5rem;border-radius:999px;">保留</span>
+                {% elif c.status == 'approved' %}
+                  <span class="badge" style="background:#c8f7c5;color:#0d5b12;padding:.2rem .5rem;border-radius:999px;">承認</span>
+                {% else %}
+                  <span class="badge" style="background:#ffd0cc;color:#7a1a12;padding:.2rem .5rem;border-radius:999px;">却下</span>
+                {% endif %}
+                <div style="font-size:.82rem;color:#777;margin-top:.2rem;">
+                  申請: {{ c.created_at or '-' }}<br>
+                  対応: {{ c.handled_at or '-' }}
+                </div>
+              </td>
+              <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;min-width:240px;">
+                <form method="post" action="{{ url_for('admin_claims_decision', cid=c.id) }}"
+                      style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="text" name="note" placeholder="申請者へのメモ（任意）"
+                         style="flex:1;min-width:180px;padding:.45rem .6rem;border:1px solid #ddd;border-radius:8px;">
+                  <button class="btn" name="action" value="approve" {% if c.status=='approved' %}disabled{% endif %}
+                          style="padding:.45rem .7rem;border:none;border-radius:10px;background:#4CAF50;color:#fff;font-weight:700;">
+                    承認
+                  </button>
+                  <button class="btn" name="action" value="reject" {% if c.status=='rejected' %}disabled{% endif %}
+                          style="padding:.45rem .7rem;border:none;border-radius:10px;background:#E53935;color:#fff;font-weight:700;">
+                    却下
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" style="padding:1rem .8rem;text-align:center;color:#777;">
+              該当する申請がありません。
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn"
+       style="display:inline-block;padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      ← ダッシュボードに戻る
+    </a>
+  </div>
+</section>
+{% endblock %}

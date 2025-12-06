@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>アレルギー表（PDF） - Luminity</title>
+
+<style>
+/* 全体設定 */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+    color: #333;
+}
+
+/* ヘッダー背景（グラデーション） */
+.header {
+    width: 100%;
+    padding: 12px 25px;
+    background: linear-gradient(to right, #f7e7c8, #ffe59e);
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #e2d5bd;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 700;
+    color: #be7b00;
+}
+
+.title {
+    margin-left: 20px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+/* テーブル共通 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
+    font-size: 12px;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 6px 4px;
+    text-align: center;
+}
+
+th {
+    background: #faf6ee;
+    font-weight: 700;
+}
+
+/* 記号カラー */
+.circle {
+    color: #ff4d4d;
+    font-weight: 700;
+}
+.cross {
+    color: #2bb673;
+    font-weight: 700;
+}
+.dash {
+    color: #888;
+}
+
+/* ページ下部（凡例） */
+.footer-note {
+    font-size: 10px;
+    text-align: left;
+    margin-top: 8px;
+    color: #555;
+}
+
+/* ページ区切り */
+.page-break {
+    page-break-before: always;
+}
+</style>
+
+</head>
+<body>
+
+<!-- ======================= -->
+<!--   ヘッダー部分          -->
+<!-- ======================= -->
+<div class="header">
+    <div class="logo">Luminity</div>
+    <div class="title">{{ page_title }}</div>
+</div>
+
+
+<!-- ======================= -->
+<!--   特定原材料7品目       -->
+<!-- ======================= -->
+<h3 style="margin: 15px 0 5px 15px;">特定原材料7品目</h3>
+
+<table>
+    <tr>
+        <th>メニュー</th>
+        {% for a in primary_allergens %}
+        <th>{{ a }}</th>
+        {% endfor %}
+    </tr>
+
+    {% for row in rows %}
+    <tr>
+        <td>{{ row["menu"] }}</td>
+        {% for a in primary_allergens %}
+            {% set val = row[a] %}
+            <td>
+                {% if val == "◯" %}
+                    <span class="circle">◯</span>
+                {% elif val == "×" %}
+                    <span class="cross">×</span>
+                {% else %}
+                    <span class="dash">-</span>
+                {% endif %}
+            </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="footer-note">
+    凡例：◯＝使用　×＝不使用　－＝不明
+</div>
+
+
+<!-- ======================= -->
+<!--   その他21品目（2ページ目〜） -->
+<!-- ======================= -->
+<div class="page-break"></div>
+
+<h3 style="margin: 15px 0 5px 15px;">その他のアレルゲン</h3>
+
+<table>
+    <tr>
+        <th>メニュー</th>
+        {% for a in other_allergens %}
+        <th>{{ a }}</th>
+        {% endfor %}
+    </tr>
+
+    {% for row in rows %}
+    <tr>
+        <td>{{ row["menu"] }}</td>
+        {% for a in other_allergens %}
+            {% set val = row[a] %}
+            <td>
+                {% if val == "◯" %}
+                    <span class="circle">◯</span>
+                {% elif val == "×" %}
+                    <span class="cross">×</span>
+                {% else %}
+                    <span class="dash">-</span>
+                {% endif %}
+            </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="footer-note">
+    ※本アレルギー表は店舗より提供された情報をもとに作成しています。<br>
+    凡例：◯＝使用　×＝不使用　－＝不明
+</div>
+
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>アレルゲン除去結果</title>
+  <style>
+    body {
+      font-family: "Helvetica Neue", sans-serif;
+      margin: 40px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+
+    .contains {
+      color: red;
+      font-weight: bold;
+    }
+
+    .not-contains {
+      color: green;
+      font-weight: bold;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #40a9ff;
+    }
+    thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f9f9f9;
+    z-index: 2;
+  }
+
+  tbody td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: #fff;
+    z-index: 1;
+    text-align: left;
+  }
+
+  thead th:first-child {
+    left: 0;
+    z-index: 3;
+  }
+  .contains {  /* ✕のセル（含む） */
+    background-color: #f9f9f9;  /* 薄い青背景 */
+    color: red;
+    font-weight: bold;
+  }
+
+  .not-contains {  /* ◯のセル（含まない） */
+    background-color: #f7f9fa;  /* さらに薄い青背景 */
+    color: rgb(0, 0, 0);
+    font-weight: bold;
+  }
+
+  .unknown {  /* ? のセル */
+    background-color: #f8f8f8;
+    color: #aaa;
+    font-style: italic;
+  }
+
+  /* オプション：アレルゲン列名 */
+  tbody td:first-child,
+  thead th:first-child {
+    background-color: #589fe6;  /* 固定列は白のままで */
+    font-weight: bold;
+  }
+thead th {
+  position: sticky;
+  top: 1;
+  background-color: #589fe6;  /* 濃い青 */
+  color: rgb(255, 255, 255);               /* 文字を白に変更してもOK（任意） */
+  z-index: 2;
+}
+
+tbody td:first-child {
+  position: sticky;
+  left: 1;
+  background-color: #589fe6;  /* 同じ濃青で統一 */
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+  z-index: 0;
+}
+
+thead th:first-child {
+  left: 0;
+  z-index: 3;
+}
+
+</style>
+</head>
+<body>
+
+  <table>
+    <thead>
+      <tr>
+        <th>アレルゲン</th>
+        {% for item in items %}
+          <th>{{ item }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+  {% for allergen in allergens %}
+    <tr>
+      <td>{{ allergen }}</td>
+      {% for item in items %}
+       {% set value = data.get(allergen, {}).get(item) %}
+        {% if value == 1 %}
+          <td class="not-contains">◯</td>
+        {% elif value == 0 %}
+          <td class="contains">✕</td>
+        {% else %}
+          <td class="unknown">？</td>  {# 値が見つからない場合も空欄にせず表示 #}
+        {% endif %}
+      {% endfor %}
+    </tr>
+  {% endfor %}
+</tbody>
+
+  </table>
+<!-- result.html -->
+<h2>アレルギー表（除外済）</h2>
+
+<table border="1">
+  <tr>
+    <th>アレルゲン</th>
+    {% for item in items %}
+      <th>{{ item }}</th>
+    {% endfor %}
+  </tr>
+  {% for allergen in allergens %}
+    <tr>
+      <td>{{ allergen }}</td>
+      {% for item in items %}
+        <td>{{ data[allergen][item] }}</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+</table>
+python
+  <a href="/select" class="back-link">← アレルゲン選択画面に戻る</a>
+</body>
+</html>

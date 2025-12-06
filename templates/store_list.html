@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>店舗一覧</title>
+</head>
+<body>
+  <h1>店舗一覧</h1>
+  <ul>
+    {% for store in stores %}
+      <li>
+        <a href="{{ url_for('store_detail', store_id=store.id) }}">
+          {{ store.name }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
